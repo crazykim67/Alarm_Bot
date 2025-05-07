@@ -168,6 +168,7 @@ function extractTime(text, messageTime) {
         /\b(\d{3,4})\b/,
         /(\d{1,2})시\s*반/,
         /(\d{1,2})시반/
+        /(\d{1,2})시/ 
     ];
 
     const ampmMatch = text.match(/(오전|오후)/);
@@ -211,7 +212,8 @@ function extractTime(text, messageTime) {
             minute = 30;
         } else if (match[0].includes('시')) {
             hour = parseInt(match[1]);
-            minute = parseInt(match[2]);
+            // minute = parseInt(match[2]);
+            minute = match[2] ? parseInt(match[2]) : 0;
         } else if (match[0].includes(':')) {
             hour = parseInt(match[1]);
             minute = parseInt(match[2]);
