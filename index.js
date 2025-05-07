@@ -70,7 +70,6 @@ client.on('messageCreate', async (message) => {
 
     const scheduleNotification = async (targetTime, label) => {
         const jobKey = `${message.id}-${label}`;
-        if (jobMap.has(jobKey)) return; // ✅ 중복 예약 방지
 
         const job = schedule.scheduleJob(targetTime, async () => {
             try {
