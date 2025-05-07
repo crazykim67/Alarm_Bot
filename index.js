@@ -99,8 +99,20 @@ client.on('messageCreate', async (message) => {
         jobMap.set(`${message.id}-${label}`, job);
     };
 
-    scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
-    scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
+
+    const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const fiveMinutesBefore = new Date(fireDate.getTime() - 5 * 60 * 1000);
+    
+    if (fiveMinutesBefore > now) {
+        scheduleNotification(fiveMinutesBefore, '게임 시작 5분전!!');
+    }
+    
+    if (fireDate > now) {
+        scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
+    }
+
+    // scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
+    // scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
 
     console.log(`[예약 콘솔로그] ${formatKoreanDate(fireDate)} 예약 완료됨. 메시지 ID: ${message.id}`);
 
