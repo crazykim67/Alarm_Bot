@@ -61,8 +61,15 @@ client.on('messageCreate', async (message) => {
     if (message.channel.name !== "🌀ㅣ모집방") return;
 
     const fireDate = extractTime(message.content, message.createdAt);
-    if (!fireDate || fireDate < new Date()) return;
-
+    // if (!fireDate || fireDate < new Date()) return;
+    if (!fireDate) {
+        console.log("❌ fireDate is null");
+        return;
+    }
+    if (fireDate < new Date()) {
+        console.log("❌ fireDate is in the past:", fireDate);
+        return;
+    }
     const userIds = [];
     reactionMap.set(message.id, userIds);
 
