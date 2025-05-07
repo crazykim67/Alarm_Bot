@@ -23,8 +23,10 @@ const processedMessages = new Set();
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (processedMessages.has(message.id)) return;
-
+    if (processedMessages.has(message.id)) {
+        console.log(`⚠️ 중복 처리된 메시지 무시: ${message.id}`);
+        return;
+    }
     processedMessages.add(message.id);
     // HELP 명령어 처리
     if (message.content === '!help' || message.content === '/help') {
