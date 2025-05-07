@@ -171,8 +171,8 @@ client.login(process.env.DISCORD_BOT_TOKEN);
 function extractTime(text, messageTime) {
     // const dayMap = { 월: 0, 화: 1, 수: 2, 목: 3, 금: 4, 토: 5, 일: 6 };
     const dayMap = { 일: 0, 월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6 };
-    const now = new Date(messageTime);
-
+    // const now = new Date(messageTime);
+    const now = new Date(messageTime.getTime() + 9 * 60 * 60 * 1000); // KST
     console.log("🔥 now:", now.toString());
     console.log("🔥 현재 요일:", now.getDay());
     // const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // KST 기준
