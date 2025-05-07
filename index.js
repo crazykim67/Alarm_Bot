@@ -165,7 +165,9 @@ function extractTime(text, messageTime) {
     const patterns = [
         /(\d{1,2})시\s*(\d{1,2})분/,
         /(\d{1,2}):(\d{1,2})/,
-        /\b(\d{3,4})\b/
+        /\b(\d{3,4})\b/,
+        /(\d{1,2})시\s*반/,
+        /(\d{1,2})시반/
     ];
 
     const ampmMatch = text.match(/(오전|오후)/);
@@ -203,23 +205,23 @@ function extractTime(text, messageTime) {
         const match = text.match(pattern);
         if (match) {
             let hour, minute;
-    
-            if (match[0].includes('시') && match.length === 3) {
-                hour = parseInt(match[1]);
-                minute = parseInt(match[2]);
-            } else if (match[0].includes('시') && match.length === 2) {
-                hour = parseInt(match[1]);
-                minute = 0; // 🟢 기본값
-            } else if (match[0].includes(':')) {
-                hour = parseInt(match[1]);
-                minute = parseInt(match[2]);
-            } else if (match[1].length === 3) {
-                hour = parseInt(match[1][0]);
-                minute = parseInt(match[1].slice(1));
-            } else {
-                hour = parseInt(match[1].slice(0, 2));
-                minute = parseInt(match[1].slice(2));
-            }
+
+        if (pattern === patterns[3] || pattern === patterns[4]) {
+            hour = parseInt(match[1]);
+            minute = 30;
+        } else if (match[0].includes('시')) {
+            hour = parseInt(match[1]);
+            minute = parseInt(match[2]);
+        } else if (match[0].includes(':')) {
+            hour = parseInt(match[1]);
+            minute = parseInt(match[2]);
+        } else if (match[1].length === 3) {
+            hour = parseInt(match[1][0]);
+            minute = parseInt(match[1].slice(1));
+        } else {
+            hour = parseInt(match[1].slice(0, 2));
+            minute = parseInt(match[1].slice(2));
+        }
     
             if (isPM && hour < 12) hour += 12;
             if (isAM && hour === 12) hour = 0;
