@@ -19,9 +19,13 @@ client.once('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
+const processedMessages = new Set();
+
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
+    if (processedMessages.has(message.id)) return;
 
+    processedMessages.add(message.id);
     // HELP 명령어 처리
     if (message.content === '!help' || message.content === '/help') {
         if (message.channel.name !== "🐱ㅣ모집알림방") return;
@@ -61,6 +65,9 @@ client.on('messageCreate', async (message) => {
     reactionMap.set(message.id, userIds);
 
     const scheduleNotification = async (targetTime, label) => {
+        const jobKey = `${message.id}-${label}`;
+        if (jobMap.has(jobKey)) return; // ✅ 중복 예약 방지
+
         const job = schedule.scheduleJob(targetTime, async () => {
             try {
                 const userIds = reactionMap.get(message.id) || [];
@@ -119,9 +126,10 @@ client.on('messageReactionAdd', (reaction, user) => {
 
 client.on('messageDelete', async (message) => {
     const labels = ['지금부터 늦으면 지각입니다!!', '게임 시작 5분전!!'];
+
     const hasAnyJob = labels.some(label => jobMap.has(`${message.id}-${label}`));
     if (!hasAnyJob) return;
-
+    
     labels.forEach(label => {
         const key = `${message.id}-${label}`;
         if (jobMap.has(key)) {
@@ -129,8 +137,11 @@ client.on('messageDelete', async (message) => {
             jobMap.delete(key);
         }
     });
+
     const userIds = reactionMap.get(message.id) || [];
+    
     reactionMap.delete(message.id);
+    processedMessages.delete(message.id);
 
     console.log(`🗑️ 예약 취소됨: ${message.id}`);
 
