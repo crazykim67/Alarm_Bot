@@ -203,10 +203,13 @@ function extractTime(text, messageTime) {
         const match = text.match(pattern);
         if (match) {
             let hour, minute;
-
-            if (match[0].includes('시')) {
+    
+            if (match[0].includes('시') && match.length === 3) {
                 hour = parseInt(match[1]);
                 minute = parseInt(match[2]);
+            } else if (match[0].includes('시') && match.length === 2) {
+                hour = parseInt(match[1]);
+                minute = 0; // 🟢 기본값
             } else if (match[0].includes(':')) {
                 hour = parseInt(match[1]);
                 minute = parseInt(match[2]);
@@ -217,16 +220,16 @@ function extractTime(text, messageTime) {
                 hour = parseInt(match[1].slice(0, 2));
                 minute = parseInt(match[1].slice(2));
             }
-
+    
             if (isPM && hour < 12) hour += 12;
             if (isAM && hour === 12) hour = 0;
-
+    
             // 오전/오후 없이 요일도 없으면 → 오후 보정
             if (!isAM && !isPM && foundDays.length === 0) {
                 const temp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
                 if (temp <= now && hour < 12) hour += 12;
             }
-
+    
             return new Date(
                 now.getFullYear(),
                 now.getMonth(),
