@@ -19,15 +19,10 @@ client.once('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-const processedMessages = new Set();
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (processedMessages.has(message.id)) {
-        console.log(`⚠️ 중복 처리된 메시지 무시: ${message.id}`);
-        return;
-    }
-    processedMessages.add(message.id);
+
     // HELP 명령어 처리
     if (message.content === '!help' || message.content === '/help') {
         if (message.channel.name !== "🐱ㅣ모집알림방") return;
@@ -170,7 +165,6 @@ client.on('messageDelete', async (message) => {
     const userIds = reactionMap.get(message.id) || [];
 
     reactionMap.delete(message.id);
-    processedMessages.delete(message.id);
 
     console.log(`🗑️ 예약 취소됨: ${message.id}`);
 
