@@ -102,7 +102,11 @@ client.on('messageCreate', async (message) => {
 
     const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const fiveMinutesBefore = new Date(fireDate.getTime() - 5 * 60 * 1000);
-    
+
+    console.log(`현재 시각 : ${now}\n`);
+    console.log(`5분 전 시각 : ${fiveMinutesBefore}\n`);
+    console.log(`FireDate : ${fireDate}\n`);
+
     if (fiveMinutesBefore > now) {
         scheduleNotification(fiveMinutesBefore, '게임 시작 5분전!!');
     }
