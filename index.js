@@ -109,10 +109,14 @@ client.on('messageCreate', async (message) => {
 
     if (fiveMinutesBefore > now) {
         scheduleNotification(fiveMinutesBefore, '게임 시작 5분전!!');
+    } else {
+        console.log('❌ 5분 전 알림은 시간 초과로 예약되지 않음');
     }
     
     if (fireDate > now) {
         scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
+    } else {
+        console.log('❌ 정시 알림은 이미 지난 시간이므로 예약되지 않음');
     }
 
     // scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
