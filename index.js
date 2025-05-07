@@ -30,11 +30,11 @@ client.on('messageCreate', async (message) => {
             color: 0x60A5FA,
             title: '📌  꽹과리 사용법 안내',
             description: [
-                '**🌀ㄸ모집방**에 다음 형식으로 메시지를 작성하세요:',
+                '**🌀ㅣ모집방**에 다음 형식으로 메시지를 작성하세요:',
                 '예: `목요일 9시 30분 칼바람 내전 구함!`',
                 '',
                 '**⏱️ 자동 인식 지원:**',
-                '- 시간: `9시30분`, `21:10`, `2130`, `오후 9:30` 등',
+                '- 시간: `9시반`, `21:10`, `2130`, `오후 9:30`, `10시` 등',
                 '- 요일: `월화수목금토일`, `다음주 월` 등',
                 '  ex) 오늘이 `수요일`인 경우 `월요일` 또는 `화요일`로 명시하면 자동으로 다음 주 `월요일` 또는 `화요일`로 예약이 잡힘',
                 '',
@@ -184,6 +184,10 @@ function extractTime(text, messageTime) {
     if (foundDays.length > 0) {
         const targetDay = foundDays[0];
 
+        console.log("🔥 현재 요일:", nowDay);
+        console.log("🎯 대상 요일:", targetDay);
+        console.log("🧩 hasNextKeyword:", hasNextKeyword);
+
         if (hasNextKeyword) {
             // 지난 요일
             if(nowDay > targetDay){
@@ -199,7 +203,7 @@ function extractTime(text, messageTime) {
             const baseOffset = (targetDay - nowDay + 7) % 7;
             targetOffset = baseOffset === 0 && targetDay !== nowDay ? 7 : baseOffset;
         }
-
+        console.log("📆 최종 targetOffset:", targetOffset);
     }
 
     for (const pattern of patterns) {
