@@ -56,26 +56,23 @@ client.on('messageCreate', async (message) => {
     if (message.channel.name !== "🌀ㅣ모집방") return;
 
     const fireDate = extractTime(message.content, message.createdAt);
-    // if (!fireDate || fireDate < new Date()) return;
-    if (!fireDate) {
-        console.log("❌ fireDate is null");
-        return;
-    }
-    if (fireDate < new Date()) {
-        console.log("❌ fireDate is in the past:", fireDate);
-        return;
-    }
+    if (!fireDate || fireDate < new Date()) return;
+
     const userIds = [];
     reactionMap.set(message.id, userIds);
 
     const scheduleNotification = async (targetTime, label) => {
-        const jobKey = `${message.id}-${label}`;
+
+        console.log(`targetTime : ${targetTime}`);
 
         const job = schedule.scheduleJob(targetTime, async () => {
+            console.log("✅ 테스트 스케줄 실행됨");
             try {
+                console.log("1111");
                 const userIds = reactionMap.get(message.id) || [];
                 const mentionIds = [...new Set([message.author.id, ...userIds])];
                 if (mentionIds.length === 0) return;
+                console.log("2222");
 
                 const mentions = mentionIds.map(id => `<@${id}>`).join(' ');
                 const alertChannel = await client.channels.fetch(process.env.ALERT_CHANNEL_ID);
@@ -88,6 +85,7 @@ client.on('messageCreate', async (message) => {
                     },
                     description: message.content,
                     footer: { text: `${label} · ${formatKoreanTime(targetTime)}` }
+                    
                 };
 
                 await alertChannel.send({ content: `🔔 ${mentions}`, embeds: [embed] });
@@ -101,27 +99,10 @@ client.on('messageCreate', async (message) => {
     };
 
 
-    const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
-    const fiveMinutesBefore = new Date(fireDate.getTime() - 5 * 60 * 1000);
+    // const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
 
-    console.log(`현재 시각 : ${now}\n`);
-    console.log(`5분 전 시각 : ${fiveMinutesBefore}\n`);
-    console.log(`FireDate : ${fireDate}\n`);
-
-    if (fiveMinutesBefore > now) {
-        scheduleNotification(fiveMinutesBefore, '게임 시작 5분전!!');
-    } else {
-        console.log('❌ 5분 전 알림은 시간 초과로 예약되지 않음');
-    }
-    
-    if (fireDate > now) {
-        scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
-    } else {
-        console.log('❌ 정시 알림은 이미 지난 시간이므로 예약되지 않음');
-    }
-
-    // scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
-    // scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
+    scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
+    scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
 
     console.log(`[예약 콘솔로그] ${formatKoreanDate(fireDate)} 예약 완료됨. 메시지 ID: ${message.id}`);
 
@@ -193,10 +174,10 @@ client.login(process.env.DISCORD_BOT_TOKEN);
 function extractTime(text, messageTime) {
     // const dayMap = { 월: 0, 화: 1, 수: 2, 목: 3, 금: 4, 토: 5, 일: 6 };
     const dayMap = { 일: 0, 월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6 };
-    // const now = new Date(messageTime);
-    const now = new Date(messageTime.getTime() + 9 * 60 * 60 * 1000); // KST
-    console.log("🔥 now:", now.toString());
-    console.log("🔥 현재 요일:", now.getDay());
+    const now = new Date(messageTime);
+    // const now = new Date(messageTime.getTime() + 9 * 60 * 60 * 1000); // KST
+    // console.log("🔥 now:", now.toString());
+    // console.log("🔥 현재 요일:", now.getDay());
     // const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // KST 기준
     // const nowDay = (kst.getUTCDay() + 6) % 7; // 0(월) ~ 6(일)
     // const nowDay = (now.getDay() + 6) % 7; // 0(월) ~ 6(일)로 맞춤
