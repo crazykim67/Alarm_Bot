@@ -169,12 +169,15 @@ client.on('messageDelete', async (message) => {
 client.login(process.env.DISCORD_BOT_TOKEN);
 
 function extractTime(text, messageTime) {
-    const dayMap = { 월: 0, 화: 1, 수: 2, 목: 3, 금: 4, 토: 5, 일: 6 };
+    // const dayMap = { 월: 0, 화: 1, 수: 2, 목: 3, 금: 4, 토: 5, 일: 6 };
+    const dayMap = { 일: 0, 월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6 };
     const now = new Date(messageTime);
     // const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // KST 기준
     // const nowDay = (kst.getUTCDay() + 6) % 7; // 0(월) ~ 6(일)
-    const nowDay = (now.getDay() + 6) % 7; // 0(월) ~ 6(일)로 맞춤
+    // const nowDay = (now.getDay() + 6) % 7; // 0(월) ~ 6(일)로 맞춤
 
+    const nowDay = now.getDay();
+    
     const patterns = [
         /(\d{1,2})시\s*(\d{1,2})분/,
         /(\d{1,2}):(\d{1,2})/,
