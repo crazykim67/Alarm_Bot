@@ -3,8 +3,6 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const schedule = require('node-schedule');
 require('dotenv').config();
 
-// const ALERT_CHANNEL_ID = '1369307766677704844'; // 실제 채널 ID로 대체하세요
-
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -257,3 +255,10 @@ function formatKoreanDate(date) {
 function containsDayOfWeek(text) {
     return /[월화수목금토일]/.test(text);
 }
+
+const express = require('express');
+const app = express();
+app.get('/', (_, res) => res.send('Bot is running!'));
+app.listen(process.env.PORT || 3000, () => {
+  console.log('✅ Express server ready');
+});
