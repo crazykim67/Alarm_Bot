@@ -1,5 +1,16 @@
 // ✅ index.js
-const { Client, GatewayIntentBits } = require('discord.js');
+const {
+    Client,
+    GatewayIntentBits,
+    Events,
+    REST,
+    Routes,
+    SlashCommandBuilder,
+    EmbedBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle
+  } = require('discord.js');
 const schedule = require('node-schedule');
 require('dotenv').config();
 
@@ -19,39 +30,16 @@ client.once('ready', () => {
     console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
+client.once('ready', () => {
+    console.log(`✅ Logged in as ${client.user.tag}`);
+
+    client.user.setActivity(`🦻 멤버들 예약`, {
+        type: 2 // Playing (기본값), 0 = Playing, 1 = Streaming, 2 = Listening, 3 = Watching, 5 = Competing
+    });
+});
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-
-    // HELP 명령어 처리
-    if (message.content === '!help' || message.content === '/help') {
-        if (message.channel.name !== "🐱ㅣ모집알림방") return;
-
-        const embed = {
-            color: 0x60A5FA,
-            title: '📌  꽹과리 사용법 안내',
-            description: [
-                '**🌀ㅣ모집방**에 다음 형식으로 메시지를 작성하세요:',
-                '예: `목요일 9시 30분 칼바람 내전 구함!`',
-                '',
-                '**⏱️ 자동 인식 지원:**',
-                '- 시간: `9시반`, `21:10`, `2130`, `오후 9:30`, `10시` 등',
-                '- 요일: `월화수목금토일`, `다음주 월` 등',
-                '  ex) 오늘이 `수요일`인 경우 `월요일` 또는 `화요일`로 명시하면 자동으로 다음 주 `월요일` 또는 `화요일`로 예약이 잡힘',
-                '',
-                '**✅ 알림 조건:**',
-                '- 이모지 누른 사람 + 작성자에게만 알림',
-                '- 정시 알림: `지금부터 늦으면 지각입니다!!`',
-                '- 5분 전 알림: `게임 시작 5분전!!`',
-                '',
-                '**❌ 모집글 삭제 시:**',
-                '→ 예약 자동 취소 및 전체 태그 알림'
-            ].join('\n')
-        };
-
-        await message.channel.send({ embeds: [embed] });
-        return;
-    }
 
     if (message.channel.name !== "🌀ㅣ모집방") return;
 
@@ -68,24 +56,26 @@ client.on('messageCreate', async (message) => {
         const job = schedule.scheduleJob(targetTime, async () => {
             console.log("✅ 테스트 스케줄 실행됨");
             try {
-                console.log("1111");
                 const userIds = reactionMap.get(message.id) || [];
                 const mentionIds = [...new Set([message.author.id, ...userIds])];
                 if (mentionIds.length === 0) return;
-                console.log("2222");
 
                 const mentions = mentionIds.map(id => `<@${id}>`).join(' ');
                 const alertChannel = await client.channels.fetch(process.env.ALERT_CHANNEL_ID);
 
                 const embed = {
                     color: label.includes('5분') ? 0x3B82F6 : 0xEF4444,
+                    title: ` **${label}** `,
                     author: {
                         name: message.member?.displayName || message.author.username,
                         icon_url: message.author.displayAvatarURL({ dynamic: true })
                     },
-                    description: message.content,
-                    footer: { text: `${label} · ${formatKoreanTime(targetTime)}` }
-                    
+                    description: [
+                        `\u200B`,
+                        `**🔔 예약 시간**\n> 🕘 ${formatKoreanDate(targetTime)}`,
+                        ``,
+                        `**📝 모집 내용**\n> ${message.content.length > 100 ? message.content.slice(0, 100) + '...' : message.content}`
+                    ].join('\n'),
                 };
 
                 await alertChannel.send({ content: `🔔 ${mentions}`, embeds: [embed] });
@@ -109,13 +99,18 @@ client.on('messageCreate', async (message) => {
     if (containsDayOfWeek(message.content)) {
         const alertChannel = await client.channels.fetch(process.env.ALERT_CHANNEL_ID);
         const embed = {
-            color: 0x10B981,
+            color: 0x10B981, // 예약 완료 색상
+            title: `📌 예약이 등록되었습니다!`,
             author: {
                 name: message.member?.displayName || message.author.username,
                 icon_url: message.author.displayAvatarURL({ dynamic: true })
             },
-            description: message.content,
-            footer: { text: `${formatKoreanDate(fireDate)} 예약 완료되었습니다.` }
+            description: [
+                `\u200B`,
+                `**🔔 예약 시간**\n> 🕘 ${formatKoreanDate(fireDate)}`,
+                ``,
+                `**📝 모집 내용**\n> ${message.content.length > 100 ? message.content.slice(0, 100) + '...' : message.content}`
+            ].join('\n'),
         };
         alertChannel.send({ embeds: [embed] });
     }
@@ -154,16 +149,23 @@ client.on('messageDelete', async (message) => {
         const mentions = mentionIds.map(id => `<@${id}>`).join(' ') || '🔕 알림 대상 없음';
 
         const embed = {
-            color: 0xF87171,
+            color: 0xF87171, // 붉은색 경고 느낌
+            title: '🗑️ 예약이 취소되었습니다!',
+            description: [
+              `\u200b`,
+              '**📝 모집 내용**',
+              `> ${message.content || '삭제된 메시지'}`,
+              '',
+              '**👥 알림 대상**',
+              `> ${mentions}`
+            ].join('\n'),
             author: {
-                name: message.member?.displayName || message.author?.username || '알 수 없음',
-                icon_url: message.author?.displayAvatarURL?.({ dynamic: true }) || null
-            },
-            description: message.content || '삭제된 메시지',
-            footer: { text: `예약이 취소되었습니다.` }
-        };
+              name: message.member?.displayName || message.author?.username || '알 수 없음',
+              icon_url: message.author?.displayAvatarURL?.({ dynamic: true }) || null
+            }
+          };
 
-        await alertChannel.send({ content: mentions, embeds: [embed] });
+        await alertChannel.send({ content: `❌ ${mentions}`, embeds: [embed] });
     } catch (err) {
         console.error(`❌ 예약 취소 알림 전송 실패`, err);
     }
@@ -289,9 +291,69 @@ function containsDayOfWeek(text) {
     return /[월화수목금토일]/.test(text);
 }
 
-const express = require('express');
-const app = express();
-app.get('/', (_, res) => res.send('Bot is running!'));
-app.listen(process.env.PORT || 3000, () => {
-  console.log('✅ Express server ready');
-});
+// async function registerSlashCommands() {
+//     const commands = [
+//       new SlashCommandBuilder()
+//         .setName('help')
+//         .setDescription('📘 알리미 봇 사용법을 안내합니다.')
+//         .toJSON()
+//     ];
+  
+//     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+  
+//     try {
+//       console.log('🔄 슬래시 명령어 등록 중...');
+//       await rest.put(
+//         Routes.applicationCommands(process.env.CLIENT_ID),
+//         { body: commands }
+//       );
+//       console.log('✅ 슬래시 명령어 등록 완료!');
+//     } catch (error) {
+//       console.error('❌ 슬래시 명령어 등록 실패:', error);
+//     }
+//   }
+
+// const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+
+// async function clearGlobalCommands() {
+//   const commands = await rest.get(Routes.applicationCommands(process.env.CLIENT_ID));
+//   for (const cmd of commands) {
+//     console.log(`🧹 삭제 중: ${cmd.name}`);
+//     await rest.delete(Routes.applicationCommand(process.env.CLIENT_ID, cmd.id));
+//   }
+//   console.log('✅ 글로벌 명령어 모두 삭제 완료!');
+// }
+
+// client.once('ready', async () => {
+//   await registerSlashCommands();
+// });
+
+// client.on(Events.InteractionCreate, async interaction => {
+//   if (interaction.isChatInputCommand()) {
+//     if (interaction.commandName === 'help') {
+//       const embed = new EmbedBuilder()
+//         .setTitle('📌  꽹과리 사용법 안내')
+//         .setDescription(
+//           `📘 예시 입력\n\n` +
+//           `**목요일 9시 30분 칼바람 내전 구함!**\n` +
+//           `⏱️ 자동 인식 지원\n\n` +
+//           `**- 시간: 9시반, 21:10, 2130, 오후 9:30, 10시 등**\n` +
+//             `**- 요일: 월화수목금토일, 다음주 월 등**\n` +
+//             `**  ex) 오늘이 수요일인 경우 월요일, 화요일 → 다음 주 요일 예약**\n` +
+//           `✅ 알림 조건\n\n` +
+//           `**- 이모지 누른 사람 + 작성자에게만 알림**\n` +
+//                 `**- 정시: 지금부터 늦으면 지각입니다!!**\n` +
+//                 `**- 5분 전: 게임 시작 5분전!!**\n` +
+//                 `❌ 모집글 삭제 시\n` + 
+//                 `**→ 예약 자동 취소 및 전체 태그 알림**\n`
+//         )
+//         .setColor(0x00BFFF)
+//         .setTimestamp();
+
+//       await interaction.reply({
+//         embeds: [embed],
+//         ephemeral: true
+//       });
+//     }
+//   }
+// });
