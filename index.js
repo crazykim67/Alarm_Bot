@@ -91,8 +91,10 @@ client.on('messageCreate', async (message) => {
 
     // const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
 
-    scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
-    scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
+    // scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
+    // scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
+    scheduleNotification(new Date(fireDate.getTime() - 9 * 60 * 60 * 1000), '지금부터 늦으면 지각입니다!!');
+    scheduleNotification(new Date(fireDate.getTime() - 9 * 60 * 60 * 1000 - 5 * 60 * 1000), '게임 시작 5분전!!');
 
     console.log(`[예약 콘솔로그] ${formatKoreanDate(fireDate)} 예약 완료됨. 메시지 ID: ${message.id}`);
 
@@ -291,69 +293,71 @@ function containsDayOfWeek(text) {
     return /[월화수목금토일]/.test(text);
 }
 
-// async function registerSlashCommands() {
-//     const commands = [
-//       new SlashCommandBuilder()
-//         .setName('help')
-//         .setDescription('📘 알리미 봇 사용법을 안내합니다.')
-//         .toJSON()
-//     ];
-  
-//     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
-  
-//     try {
-//       console.log('🔄 슬래시 명령어 등록 중...');
-//       await rest.put(
-//         Routes.applicationCommands(process.env.CLIENT_ID),
-//         { body: commands }
-//       );
-//       console.log('✅ 슬래시 명령어 등록 완료!');
-//     } catch (error) {
-//       console.error('❌ 슬래시 명령어 등록 실패:', error);
-//     }
-//   }
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
 
-// const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+async function registerGuildCommands() {
+  const commands = [
+    new SlashCommandBuilder().setName('help').setDescription('📘 꽹가리 봇 사용법을 안내합니다.').toJSON()
+  ];
+  await rest.put(
+    Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+    { body: commands }
+  );
+  console.log('✅ 서버 전용 슬래시 명령어 등록 완료');
+}
 
-// async function clearGlobalCommands() {
-//   const commands = await rest.get(Routes.applicationCommands(process.env.CLIENT_ID));
-//   for (const cmd of commands) {
-//     console.log(`🧹 삭제 중: ${cmd.name}`);
-//     await rest.delete(Routes.applicationCommand(process.env.CLIENT_ID, cmd.id));
-//   }
-//   console.log('✅ 글로벌 명령어 모두 삭제 완료!');
-// }
+async function clearGlobalCommands() {
+  const commands = await rest.get(Routes.applicationCommands(process.env.CLIENT_ID));
+  for (const cmd of commands) {
+    console.log(`🧹 글로벌 명령 삭제 중: ${cmd.name}`);
+    await rest.delete(Routes.applicationCommand(process.env.CLIENT_ID, cmd.id));
+  }
+  console.log('✅ 글로벌 명령어 정리 완료');
+}
 
-// client.once('ready', async () => {
-//   await registerSlashCommands();
-// });
+async function clearGuildCommands(guildId) {
+  const commands = await rest.get(Routes.applicationGuildCommands(process.env.CLIENT_ID, guildId));
+  for (const cmd of commands) {
+    console.log(`🧹 서버(${guildId}) 명령 삭제 중: ${cmd.name}`);
+    await rest.delete(Routes.applicationGuildCommand(process.env.CLIENT_ID, guildId, cmd.id));
+  }
+  console.log(`✅ 서버(${guildId}) 명령어 정리 완료`);
+}
 
-// client.on(Events.InteractionCreate, async interaction => {
-//   if (interaction.isChatInputCommand()) {
-//     if (interaction.commandName === 'help') {
-//       const embed = new EmbedBuilder()
-//         .setTitle('📌  꽹과리 사용법 안내')
-//         .setDescription(
-//           `📘 예시 입력\n\n` +
-//           `**목요일 9시 30분 칼바람 내전 구함!**\n` +
-//           `⏱️ 자동 인식 지원\n\n` +
-//           `**- 시간: 9시반, 21:10, 2130, 오후 9:30, 10시 등**\n` +
-//             `**- 요일: 월화수목금토일, 다음주 월 등**\n` +
-//             `**  ex) 오늘이 수요일인 경우 월요일, 화요일 → 다음 주 요일 예약**\n` +
-//           `✅ 알림 조건\n\n` +
-//           `**- 이모지 누른 사람 + 작성자에게만 알림**\n` +
-//                 `**- 정시: 지금부터 늦으면 지각입니다!!**\n` +
-//                 `**- 5분 전: 게임 시작 5분전!!**\n` +
-//                 `❌ 모집글 삭제 시\n` + 
-//                 `**→ 예약 자동 취소 및 전체 태그 알림**\n`
-//         )
-//         .setColor(0x00BFFF)
-//         .setTimestamp();
+(async () => {
+  await clearGlobalCommands();
+  await clearGuildCommands(process.env.GUILD_ID);
+  await registerGuildCommands();
+})();
+//#endregion
 
-//       await interaction.reply({
-//         embeds: [embed],
-//         ephemeral: true
-//       });
-//     }
-//   }
-// });
+client.on(Events.InteractionCreate, async interaction => {
+  if (interaction.isChatInputCommand()) {
+    if (interaction.commandName === 'help') {
+      const embed = new EmbedBuilder()
+        .setTitle('📌  꽹과리 사용법 안내')
+        .setDescription(
+          `📘 예시 입력\n\n` +
+          `**목요일 9시 30분 칼바람 내전 구함!**\n` +
+          `⏱️ 자동 인식 지원\n\n` +
+          `**- 시간: 9시반, 21:10, 2130, 오후 9:30, 10시 등**\n` +
+            `**- 요일: 월화수목금토일, 다음주 월 등**\n` +
+            `**  ex) 오늘이 수요일인 경우 월요일, 화요일 → 다음 주 요일 예약**\n` +
+          `✅ 알림 조건\n\n` +
+          `**- 이모지 누른 사람 + 작성자에게만 알림**\n` +
+                `**- 정시: 지금부터 늦으면 지각입니다!!**\n` +
+                `**- 5분 전: 게임 시작 5분전!!**\n` +
+                `**- 시간은 무조건 기입해야하며 요일을 생략할 시 금일로 판단**\n` +
+                `❌ 모집글 삭제 시\n` + 
+                `**→ 예약 자동 취소 및 전체 태그 알림**\n`
+        )
+        .setColor(0x00BFFF)
+        .setTimestamp();
+
+      await interaction.reply({
+        embeds: [embed],
+        ephemeral: true
+      });
+    }
+  }
+});
