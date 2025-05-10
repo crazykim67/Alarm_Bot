@@ -50,10 +50,10 @@ client.on('messageCreate', async (message) => {
     reactionMap.set(message.id, userIds);
 
     const scheduleNotification = async (targetTime, label) => {
-
+        const utcTarget = new Date(targetTime.getTime() - 9 * 60 * 60 * 1000);
         console.log(`targetTime : ${targetTime}`);
 
-        const job = schedule.scheduleJob(targetTime, async () => {
+        const job = schedule.scheduleJob(utcTarget, async () => {
             console.log("✅ 테스트 스케줄 실행됨");
             try {
                 const userIds = reactionMap.get(message.id) || [];
@@ -91,10 +91,10 @@ client.on('messageCreate', async (message) => {
 
     // const now = new Date(Date.now() + 9 * 60 * 60 * 1000);
 
-    // scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
-    // scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
-    scheduleNotification(new Date(fireDate.getTime() - 9 * 60 * 60 * 1000), '지금부터 늦으면 지각입니다!!');
-    scheduleNotification(new Date(fireDate.getTime() - 9 * 60 * 60 * 1000 - 5 * 60 * 1000), '게임 시작 5분전!!');
+    scheduleNotification(fireDate, '지금부터 늦으면 지각입니다!!');
+    scheduleNotification(new Date(fireDate.getTime() - 5 * 60 * 1000), '게임 시작 5분전!!');
+    // scheduleNotification(new Date(fireDate.getTime() - 9 * 60 * 60 * 1000), '지금부터 늦으면 지각입니다!!');
+    // scheduleNotification(new Date(fireDate.getTime() - 9 * 60 * 60 * 1000 - 5 * 60 * 1000), '게임 시작 5분전!!');
 
     console.log(`[예약 콘솔로그] ${formatKoreanDate(fireDate)} 예약 완료됨. 메시지 ID: ${message.id}`);
 
