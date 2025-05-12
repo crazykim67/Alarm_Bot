@@ -125,6 +125,20 @@ client.on('messageReactionAdd', (reaction, user) => {
     reactionMap.set(reaction.message.id, list);
 });
 
+client.on('messageReactionRemove', (reaction, user) => {
+    if (user.bot) return;
+
+    const list = reactionMap.get(reaction.message.id);
+    if (!list) return;
+
+    const index = list.indexOf(user.id);
+    if (index !== -1) {
+        list.splice(index, 1);
+        reactionMap.set(reaction.message.id, list);
+        console.log(`🚫 이모지 제거: ${user.tag} (메시지 ID: ${reaction.message.id})`);
+    }
+});
+
 client.on('messageDelete', async (message) => {
     const labels = ['지금부터 늦으면 지각입니다!!', '게임 시작 5분전!!'];
 
@@ -132,12 +146,13 @@ client.on('messageDelete', async (message) => {
     if (!hasAnyJob) return;
     
     labels.forEach(label => {
-        const key = `${message.id}-${label}`;
-        if (jobMap.has(key)) {
-            jobMap.get(key).cancel();
-            jobMap.delete(key);
-        }
-    });
+    const key = `${message.id}-${label}`;
+    const job = jobMap.get(key);
+    if (job) {
+        job.cancel();
+        jobMap.delete(key);
+    }
+});
 
     const userIds = reactionMap.get(message.id) || [];
 
