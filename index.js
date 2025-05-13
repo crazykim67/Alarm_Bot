@@ -210,13 +210,11 @@ function extractTime(text, messageTime) {
 
     let targetOffset = 0;
 
-    if (/모레/.test(text)) {
-        targetOffset = 2;
-    } else if (/내일/.test(text)) {
+    if (/내일/.test(text)) {
         targetOffset = 1;
     } else {
         const hasNextKeyword = /다음\s*주/.test(text);
-        const filteredText = text.replace(/내일|모레/g, '');
+        const filteredText = text.replace(/내일/g, '');
         const weekdayMatch = [...filteredText.matchAll(/[월화수목금토일]/g)];
         const foundDays = weekdayMatch.map(match => dayMap[match[0]]);
 
@@ -257,7 +255,7 @@ function extractTime(text, messageTime) {
             if (isPM && hour < 12) hour += 12;
             if (isAM && hour === 12) hour = 0;
 
-            if (!isAM && !isPM && !/([월화수목금토일]|내일|모레)/.test(text)) {
+            if (!isAM && !isPM && !/([월화수목금토일]|내일)/.test(text)) {
                 const temp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
                 if (temp <= now && hour < 12) hour += 12;
             }
@@ -288,14 +286,14 @@ function formatKoreanDate(date) {
 }
 
 function containsDayOfWeek(text) {
-    return /[월화수목금토일]|내일|모레/.test(text);
+    return /[월화수목금토일]/.test(text);
 }
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
 
 async function registerGuildCommands() {
   const commands = [
-    new SlashCommandBuilder().setName('help').setDescription('📘 꽹가리 봇 사용법을 안내합니다.').toJSON()
+    new SlashCommandBuilder().setName('help').setDescription('📘 꽹과리 봇 사용법을 안내합니다.').toJSON()
   ];
   await rest.put(
     Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
