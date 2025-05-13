@@ -192,16 +192,8 @@ client.on('messageDelete', async (message) => {
 client.login(process.env.DISCORD_BOT_TOKEN);
 
 function extractTime(text, messageTime) {
-    // const dayMap = { 월: 0, 화: 1, 수: 2, 목: 3, 금: 4, 토: 5, 일: 6 };
     const dayMap = { 일: 0, 월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6 };
-    // const now = new Date(messageTime);
     const now = new Date(messageTime.getTime() + 9 * 60 * 60 * 1000); // KST
-    // console.log("🔥 now:", now.toString());
-    // console.log("🔥 현재 요일:", now.getDay());
-    // const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // KST 기준
-    // const nowDay = (kst.getUTCDay() + 6) % 7; // 0(월) ~ 6(일)
-    // const nowDay = (now.getDay() + 6) % 7; // 0(월) ~ 6(일)로 맞춤
-
     const nowDay = now.getDay();
 
     const patterns = [
@@ -210,12 +202,13 @@ function extractTime(text, messageTime) {
         /\b(\d{3,4})\b/,
         /(\d{1,2})시\s*반/,
         /(\d{1,2})시반/,
-        /(\d{1,2})시/ 
+        /(\d{1,2})시/
     ];
 
-    const ampmMatch = text.match(/(오전|오후)/);
-    const isAM = ampmMatch?.[0] === '오전';
-    const isPM = ampmMatch?.[0] === '오후';
+    const isAM = /(오전|아침)/.test(text);
+    const isPM = /(오후|저녁)/.test(text);
+
+    let targetOffset = 0;
 
     if (/모레/.test(text)) {
         targetOffset = 2;
@@ -223,36 +216,19 @@ function extractTime(text, messageTime) {
         targetOffset = 1;
     } else {
         const hasNextKeyword = /다음\s*주/.test(text);
-    // const hasNextKeyword = /다음\s*주/.test(text);
-    const filteredText = text.replace(/내일|모레/g, '');
-    const weekdayMatch = [...filteredText.matchAll(/[월화수목금토일]/g)];
-    const foundDays = weekdayMatch.map(match => dayMap[match[0]]);
-
-    let targetOffset = 0;
+        const filteredText = text.replace(/내일|모레/g, '');
+        const weekdayMatch = [...filteredText.matchAll(/[월화수목금토일]/g)];
+        const foundDays = weekdayMatch.map(match => dayMap[match[0]]);
 
         if (foundDays.length > 0) {
             const targetDay = foundDays[0];
-
-            console.log("🔥 현재 요일:", nowDay);
-            console.log("🎯 대상 요일:", targetDay);
-            console.log("🧩 hasNextKeyword:", hasNextKeyword);
+            const baseOffset = (targetDay - nowDay + 7) % 7;
 
             if (hasNextKeyword) {
-                // 지난 요일
-                if(nowDay > targetDay){
-                    const baseOffset = (targetDay - nowDay + 7) % 7;
-                    targetOffset = baseOffset === 0 && targetDay !== nowDay ? 7 : baseOffset;
-                }
-                // 지나지 않은 요일
-                else{
-                    const baseOffset = (targetDay - nowDay + 7) % 7;
-                    targetOffset = baseOffset === 0 ? 7 : baseOffset + 7;
-                }   
+                targetOffset = baseOffset === 0 ? 7 : baseOffset + 7;
             } else {
-                const baseOffset = (targetDay - nowDay + 7) % 7;
                 targetOffset = baseOffset === 0 && targetDay !== nowDay ? 7 : baseOffset;
             }
-            console.log("📆 최종 targetOffset:", targetOffset);
         }
     }
 
@@ -261,33 +237,31 @@ function extractTime(text, messageTime) {
         if (match) {
             let hour, minute;
 
-        if (pattern === patterns[3] || pattern === patterns[4]) {
-            hour = parseInt(match[1]);
-            minute = 30;
-        } else if (match[0].includes('시')) {
-            hour = parseInt(match[1]);
-            // minute = parseInt(match[2]);
-            minute = match[2] ? parseInt(match[2]) : 0;
-        } else if (match[0].includes(':')) {
-            hour = parseInt(match[1]);
-            minute = parseInt(match[2]);
-        } else if (match[1].length === 3) {
-            hour = parseInt(match[1][0]);
-            minute = parseInt(match[1].slice(1));
-        } else {
-            hour = parseInt(match[1].slice(0, 2));
-            minute = parseInt(match[1].slice(2));
-        }
-    
+            if (pattern === patterns[3] || pattern === patterns[4]) {
+                hour = parseInt(match[1]);
+                minute = 30;
+            } else if (match[0].includes('시')) {
+                hour = parseInt(match[1]);
+                minute = match[2] ? parseInt(match[2]) : 0;
+            } else if (match[0].includes(':')) {
+                hour = parseInt(match[1]);
+                minute = parseInt(match[2]);
+            } else if (match[1].length === 3) {
+                hour = parseInt(match[1][0]);
+                minute = parseInt(match[1].slice(1));
+            } else {
+                hour = parseInt(match[1].slice(0, 2));
+                minute = parseInt(match[1].slice(2));
+            }
+
             if (isPM && hour < 12) hour += 12;
             if (isAM && hour === 12) hour = 0;
-    
-            // 오전/오후 없이 요일도 없으면 → 오후 보정
-            if (!isAM && !isPM && foundDays.length === 0) {
+
+            if (!isAM && !isPM && !/([월화수목금토일]|내일|모레)/.test(text)) {
                 const temp = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
                 if (temp <= now && hour < 12) hour += 12;
             }
-    
+
             return new Date(
                 now.getFullYear(),
                 now.getMonth(),
