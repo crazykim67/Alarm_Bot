@@ -288,7 +288,7 @@ function formatKoreanDate(date) {
 }
 
 function containsDayOfWeek(text) {
-    return /[월화수목금토일]/.test(text);
+    return /[월화수목금토일]|내일|모레/.test(text);
 }
 
 const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
