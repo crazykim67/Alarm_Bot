@@ -41,6 +41,7 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
+    // if (message.channel.name !== "📅ㅣ모집방") return;
     if (message.channel.name !== "🌀ㅣ모집방") return;
 
     const fireDate = extractTime(message.content, message.createdAt);
@@ -216,7 +217,15 @@ function extractTime(text, messageTime) {
     const isAM = ampmMatch?.[0] === '오전';
     const isPM = ampmMatch?.[0] === '오후';
 
-    const hasNextKeyword = /다음\s*주/.test(text);
+    if (/모레/.test(text)) {
+        targetOffset = 2;
+    } else if (/내일/.test(text)) {
+        targetOffset = 1;
+    } else {
+        const hasNextKeyword = /다음\s*주/.test(text);
+    }
+    // const hasNextKeyword = /다음\s*주/.test(text);
+    const filteredText = text.replace(/내일|모레/g, '');
     const weekdayMatch = [...text.matchAll(/[월화수목금토일]/g)];
     const foundDays = weekdayMatch.map(match => dayMap[match[0]]);
 
