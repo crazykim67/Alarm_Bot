@@ -223,37 +223,37 @@ function extractTime(text, messageTime) {
         targetOffset = 1;
     } else {
         const hasNextKeyword = /다음\s*주/.test(text);
-    }
     // const hasNextKeyword = /다음\s*주/.test(text);
     const filteredText = text.replace(/내일|모레/g, '');
-    const weekdayMatch = [...text.matchAll(/[월화수목금토일]/g)];
+    const weekdayMatch = [...filteredText.matchAll(/[월화수목금토일]/g)];
     const foundDays = weekdayMatch.map(match => dayMap[match[0]]);
 
     let targetOffset = 0;
 
-    if (foundDays.length > 0) {
-        const targetDay = foundDays[0];
+        if (foundDays.length > 0) {
+            const targetDay = foundDays[0];
 
-        console.log("🔥 현재 요일:", nowDay);
-        console.log("🎯 대상 요일:", targetDay);
-        console.log("🧩 hasNextKeyword:", hasNextKeyword);
+            console.log("🔥 현재 요일:", nowDay);
+            console.log("🎯 대상 요일:", targetDay);
+            console.log("🧩 hasNextKeyword:", hasNextKeyword);
 
-        if (hasNextKeyword) {
-            // 지난 요일
-            if(nowDay > targetDay){
+            if (hasNextKeyword) {
+                // 지난 요일
+                if(nowDay > targetDay){
+                    const baseOffset = (targetDay - nowDay + 7) % 7;
+                    targetOffset = baseOffset === 0 && targetDay !== nowDay ? 7 : baseOffset;
+                }
+                // 지나지 않은 요일
+                else{
+                    const baseOffset = (targetDay - nowDay + 7) % 7;
+                    targetOffset = baseOffset === 0 ? 7 : baseOffset + 7;
+                }   
+            } else {
                 const baseOffset = (targetDay - nowDay + 7) % 7;
                 targetOffset = baseOffset === 0 && targetDay !== nowDay ? 7 : baseOffset;
             }
-            // 지나지 않은 요일
-            else{
-                const baseOffset = (targetDay - nowDay + 7) % 7;
-                targetOffset = baseOffset === 0 ? 7 : baseOffset + 7;
-            }   
-        } else {
-            const baseOffset = (targetDay - nowDay + 7) % 7;
-            targetOffset = baseOffset === 0 && targetDay !== nowDay ? 7 : baseOffset;
+            console.log("📆 최종 targetOffset:", targetOffset);
         }
-        console.log("📆 최종 targetOffset:", targetOffset);
     }
 
     for (const pattern of patterns) {
